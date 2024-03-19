@@ -84,11 +84,12 @@ export const SignIn = () => {
     };
     signInMutation.mutate(body, {
       onSuccess: (signIn) => {
-        storage.setToken(signIn.token);
+        storage.setToken(signIn.data.token);
         signin(signIn.data.accountId, signIn.data.name, 2);
       },
-      onError: (err: any) => {
-        setErrorMessage(err.response?.data.errorMessage);
+      onError: (error) => {
+        // setErrorMessage(error?.response.);
+        console.log(error)
       },
     });
   };
@@ -96,6 +97,7 @@ export const SignIn = () => {
     setErrorMessage(authError);
     setAuthError("");
   }
+  
   if (isSignIn) {
     return <Navigate replace to="/" />;
   } else {

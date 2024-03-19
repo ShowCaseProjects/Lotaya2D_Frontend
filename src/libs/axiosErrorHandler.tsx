@@ -31,7 +31,7 @@ export const AxiosErrorHandlerProvider: FC<Props> = ({ children }) => {
     axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        switch (error.response?.status) {
+        switch (error?.response?.status) {
           default:
             return Promise.reject();
           case 401:

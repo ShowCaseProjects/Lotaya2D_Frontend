@@ -51,6 +51,9 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "resetMocks": false
+  },
   "devDependencies": {
     "@types/react-modal": "^3.16.3"
   }
