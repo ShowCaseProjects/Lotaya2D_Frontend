@@ -53,6 +53,7 @@ export const SignIn = () => {
   const { authErrorMessage } = useSession() as sessionContextValueType;
   const [authError, setAuthError] = useState(authErrorMessage);
   const { isSignIn, signin } = useAuth() as authContextValueType;
+  const  isSignIns  =window.localStorage.getItem('isSignInInfo');
   const [errorMessage, setErrorMessage] = useState("");
 
   const {
@@ -78,7 +79,7 @@ export const SignIn = () => {
 
   const { signInMutation } = useMutateTask();
   const onSubmit: SubmitHandler<FormData> = (formData: FormData) => {
-    setErrorMessage("");
+    setErrorMessage('');
     const body: SignInRequestBody = {
       ...formData,
     };
@@ -98,7 +99,7 @@ export const SignIn = () => {
     setAuthError("");
   }
   
-  if (isSignIn) {
+  if (isSignIns) {
     return <Navigate replace to="/" />;
   } else {
     return (
