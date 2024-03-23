@@ -1,6 +1,6 @@
 export type PaymentTypeList = {
   paymentMethodId: string;
-  paymentStatus: string;
+  paymentStatus?: string;
   userId: string;
   paymentType: string;
   paymentAccountName: string;

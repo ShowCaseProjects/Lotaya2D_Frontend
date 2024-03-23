@@ -53,7 +53,7 @@ export const SignIn = () => {
   const { authErrorMessage } = useSession() as sessionContextValueType;
   const [authError, setAuthError] = useState(authErrorMessage);
   const { isSignIn, signin } = useAuth() as authContextValueType;
-  const  isSignIns  =window.localStorage.getItem('isSignInInfo');
+  const isSignIns = window.localStorage.getItem("isSignInInfo");
   const [errorMessage, setErrorMessage] = useState("");
 
   const {
@@ -79,7 +79,7 @@ export const SignIn = () => {
 
   const { signInMutation } = useMutateTask();
   const onSubmit: SubmitHandler<FormData> = (formData: FormData) => {
-    setErrorMessage('');
+    setErrorMessage("");
     const body: SignInRequestBody = {
       ...formData,
     };
@@ -88,9 +88,18 @@ export const SignIn = () => {
         storage.setToken(signIn.data.token);
         signin(signIn.data.accountId, signIn.data.name, 2);
       },
-      onError: (error) => {
-        // setErrorMessage(error?.response.);
-        console.log(error)
+      onError: (error: any) => {
+        if (error.response?.status === 401) {
+          if (["E1115"].includes(error.response?.data.errorCode)) {
+            setErrorMessage(error.response?.data.errorMessage);
+          }
+        } else if (error.response?.status === 400) {
+          if (["E1000"].includes(error.response?.data.errorCode)) {
+            setErrorMessage(error.response?.data.errorMessage);
+          }
+        } else {
+          setErrorMessage(error.response?.data.errorMessage);
+        }
       },
     });
   };
@@ -98,7 +107,7 @@ export const SignIn = () => {
     setErrorMessage(authError);
     setAuthError("");
   }
-  
+
   if (isSignIns) {
     return <Navigate replace to="/" />;
   } else {
@@ -136,7 +145,7 @@ export const SignIn = () => {
                   {errorMessage}
                 </Alert>
               ) : (
-                ""
+                " "
               )}
             </StyledOnlyFlexDiv>
             <br />

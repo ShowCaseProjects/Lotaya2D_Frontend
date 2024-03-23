@@ -11,10 +11,13 @@ import {
   styled as styledMUI,
 } from "@mui/material";
 import styled from "@emotion/styled";
-import { Link } from "react-router-dom";
-import { NavigationLink } from "../pages/Common/NavigationLink";
+import { Link, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { LoginAdminInformation } from "../pages/Admin/LoginAdminInformation";
+import Sidebar from "../layoutcommon/Sidebar";
+import Topbar from "../layoutcommon/Topbar";
+import sizeConfigs from "../config/sizeConfigs";
+import colorConfigs from "../config/colorConfigs";
 
 interface InterfaceMenu {
   children: React.ReactNode;
@@ -23,7 +26,7 @@ const drawerWidth = 150;
 
 export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
   const [loginModalIsOpen, setLoginModalIsOpen] = useState(false);
-  const [activePath, setActivePath] = useState("");
+  const [activePath, setActivePath] = useState('');
   return (
     <Box sx={{ dispaly: "flex", zIndex: "10000" }}>
       <CssBaseline />
@@ -43,9 +46,9 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
           </StyledLinkTitle>
           <StyledMenuChildDiv>
             <LoginAdminInformation
-            modalIsOpen={loginModalIsOpen}
-            onClick={()=>setLoginModalIsOpen(true)}
-            onRequestClose={()=>setLoginModalIsOpen(false)}
+              modalIsOpen={loginModalIsOpen}
+              onClick={() => setLoginModalIsOpen(true)}
+              onRequestClose={() => setLoginModalIsOpen(false)}
             />
             <StyledLinkMenu to="/user/change-password">
               <StyledBackRetainButton
@@ -62,7 +65,7 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
           </StyledMenuChildDiv>
         </StyledMenuParentDiv>
       </StyledAppBar>
-      <Drawer
+      {/* <Drawer
         variant="permanent"
         sx={{
           width: drawerWidth,
@@ -73,11 +76,42 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
           },
         }}
       >
-        <Toolbar />
-        <Box sx={{ overflow: "auto"}}>
+        <Toolbar /> */}
+        {/* <Box sx={{ overflow: "auto" }}>
           <StyledList>
             <StyledLi>Payment</StyledLi>
             <NavigationLink
+              navigationPath="/payment?paymentStatus=Request"
+              buttonOnClick={() => {
+                setActivePath("/payment?paymentStatus=Request");
+              }}
+              activePath={activePath}
+              setActivePath={setActivePath}
+              navigationLabel="Request"
+              buttonStyle={{ paddingLeft: "17px" }}
+            />
+            <NavigationLink
+              navigationPath="/payment?paymentStatus=Approver"
+              buttonOnClick={() => {
+                setActivePath("/payment?paymentStatus=Approver");
+              }}
+              activePath={activePath}
+              setActivePath={setActivePath}
+              navigationLabel="Approver"
+              buttonStyle={{ paddingLeft: "17px" }}
+            />
+            <NavigationLink
+              navigationPath="/payment?paymentStatus=Reject"
+              buttonOnClick={() => {
+                setActivePath("/payment?paymentStatus=Reject");
+              }}
+              activePath={activePath}
+              setActivePath={setActivePath}
+              navigationLabel="Reject"
+              buttonStyle={{ paddingLeft: "17px" }}
+            />
+            <StyledLi>Withdraw</StyledLi>
+            <NavigationLink
               navigationPath="/payment"
               buttonOnClick={() => {
                 setActivePath("/payment");
@@ -85,7 +119,7 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
               activePath={activePath}
               setActivePath={setActivePath}
               navigationLabel="Approver"
-              buttonStyle={{paddingLeft:'17px'}}
+              buttonStyle={{ paddingLeft: "17px" }}
             />
             <NavigationLink
               navigationPath="/payment"
@@ -95,7 +129,7 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
               activePath={activePath}
               setActivePath={setActivePath}
               navigationLabel="Reject"
-              buttonStyle={{paddingLeft:'17px'}}
+              buttonStyle={{ paddingLeft: "17px" }}
             />
             <NavigationLink
               navigationPath="/payment"
@@ -105,38 +139,7 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
               activePath={activePath}
               setActivePath={setActivePath}
               navigationLabel="Request"
-              buttonStyle={{paddingLeft:'17px'}}
-            />
-             <StyledLi>Withdraw</StyledLi>
-            <NavigationLink
-              navigationPath="/payment"
-              buttonOnClick={() => {
-                setActivePath("/payment");
-              }}
-              activePath={activePath}
-              setActivePath={setActivePath}
-              navigationLabel="Approver"
-              buttonStyle={{paddingLeft:'17px'}}
-            />
-            <NavigationLink
-              navigationPath="/payment"
-              buttonOnClick={() => {
-                setActivePath("/payment");
-              }}
-              activePath={activePath}
-              setActivePath={setActivePath}
-              navigationLabel="Reject"
-              buttonStyle={{paddingLeft:'17px'}}
-            />
-            <NavigationLink
-              navigationPath="/payment"
-              buttonOnClick={() => {
-                setActivePath("/payment");
-              }}
-              activePath={activePath}
-              setActivePath={setActivePath}
-              navigationLabel="Request"
-              buttonStyle={{paddingLeft:'17px'}}
+              buttonStyle={{ paddingLeft: "17px" }}
             />
           </StyledList>
           <Divider />
@@ -148,7 +151,32 @@ export const MainLayout: React.FC<InterfaceMenu> = ({ children }) => {
         style={{ overflowX: "auto", marginLeft: "150px" }}
       >
         {children}
+      </Box> */}
+       <Box sx={{ display: "flex" }}>
+      <Topbar />
+      <Box
+        component="nav"
+        sx={{
+          width: sizeConfigs.sidebar.width,
+          flexShrink: 0
+        }}
+      >
+        <Sidebar />
       </Box>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: `calc(100% - ${sizeConfigs.sidebar.width})`,
+          minHeight: "100vh",
+          backgroundColor: colorConfigs.mainBg
+        }}
+      >
+        <Toolbar />
+        <Outlet />
+      </Box>
+    </Box>
     </Box>
   );
 };

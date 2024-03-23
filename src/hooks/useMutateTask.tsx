@@ -7,14 +7,16 @@ export const useMutateTask = () => {
   const signInMutation = useMutation(
     (body: SignInRequestBody): Promise<any> => {
       return axios.post(`${API_URL}/auth/admin/login`, body);
-    }
+    },
   );
 
   const changePasswordMutation = useMutation(
     (body: SignInRequestBody): Promise<any> => {
-      return axios.post(`${API_URL}/auth/admin/login`, body).then(res=>res.data);
-    }
+      return axios
+        .post(`${API_URL}/auth/admin/login`, body)
+        .then((res) => res.data);
+    },
   );
 
-  return { signInMutation ,changePasswordMutation};
+  return { signInMutation, changePasswordMutation };
 };

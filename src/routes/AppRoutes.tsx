@@ -11,16 +11,13 @@ export const AppRoutes = () => {
       <Routes>
         <Route path="/signIn" element={<SignIn />} />
         <Route path="/" element={<ProtectedLayout />}>
-          <Route path="/" element={<PaymentList />} />
+          <Route path="/" element={<ChangePassword />} />
           <Route path="/payment" element={<PaymentList />} />
           <Route
-            path="/payment/detail/:paymentId"
+            path="/payment/detail/:paymentMethodId"
             element={<PaymentDetail />}
           />
-            <Route
-            path="/user/change-password"
-            element={<ChangePassword />}
-          />
+          <Route path="/user/change-password" element={<ChangePassword />} />
         </Route>
       </Routes>
     </>

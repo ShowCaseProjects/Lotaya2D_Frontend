@@ -31,15 +31,18 @@ export const AxiosErrorHandlerProvider: FC<Props> = ({ children }) => {
     axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        switch (error?.response?.status) {
+        switch (error.response?.status) {
           default:
-            return Promise.reject();
+            return Promise.reject(error);
           case 401:
-            if (error.response.data.errorCode === "E1115") {
+            if (
+              error.response.data.errorCode === "E1115" ||
+              error.response.data.errorCode === "E1111"
+            ) {
               setAuthErrorMessage(error.response.data.errorMessage);
               signOut();
             }
-            return Promise.reject();
+            return Promise.reject(error);
           case 500:
             if (error.response.data.errorCode === "E1119") {
               setSystemErrorMessage(error.response.data.errorMessage);

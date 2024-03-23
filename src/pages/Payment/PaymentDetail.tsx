@@ -11,10 +11,14 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { StyledTable } from "./PaymentList";
-import { ModalPaymentConfirm } from "./ModalPaymentConfirm";
+import { ModalPaymentConfirm } from "./ApprovePaymentConfirm";
 import { DenyPaymentConfirm } from "./DenyPaymentConfirm";
 import { CommonCompleteModal } from "../../pages/Common/CommonCompleteModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import axios, { AxiosError } from "axios";
+import { API_URL } from "../../config";
+import { useQuery } from "react-query";
+import { Loading } from "../Common/Loading";
 
 type PaymentType = {
   id:
@@ -35,6 +39,7 @@ type PaymentType = {
 
 export const PaymentDetail = () => {
   const navigate = useNavigate();
+  const { paymentMethodId } = useParams();
   const [errorMessage, setErrorMessage] = useState("");
   const [approveConfirmModalIsOpen, setApproveConfirmMdalIsOpen] =
     useState(false);
@@ -44,85 +49,159 @@ export const PaymentDetail = () => {
   const [commonCompleteModalIsOpen, setCommonCompleteModalIsOpen] =
     useState(false);
 
+  const [paymentDetailApiError, setPaymentDetailApiError] =
+    useState<AxiosError | null>(null);
+
+  const fetchPaymentDetail = async () => {
+    const paymentDetail: PaymentDetailResponseBody = await axios
+      .get(`${API_URL}/paymentmethod/payment/` + paymentMethodId)
+      .then((res) => {
+        setIsLoading(false);
+        return res.data;
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        setPaymentDetailApiError(error);
+      });
+    return paymentDetail;
+  };
+
+  const { error, data, refetch } = useQuery({
+    queryKey: "paymentDetail" + paymentMethodId,
+    queryFn: fetchPaymentDetail,
+  });
+
+  if (isLoading) {
+    return (
+      <>
+        <h2>Payment detail</h2>
+        <span>Loading</span>
+        <Loading loadingIsOpen={isLoading} />
+      </>
+    );
+  }
+
+  if (error instanceof AxiosError) {
+    return (
+      <>
+        <h2>Payment detail</h2>
+        Error
+      </>
+    );
+  }
+  if (paymentDetailApiError instanceof AxiosError) {
+    const innerApiError: TypeApiError = paymentDetailApiError?.response
+      ?.data as TypeApiError;
+    if (
+      innerApiError?.errorCode === "E1000" ||
+      innerApiError?.errorCode === "E1111"
+    ) {
+      return (
+        <>
+          <h2>Payment detail</h2>
+          <br />
+          <StyledFlexBlockLeftDiv>
+            <Alert variant="outlined" severity="error" style={StyledErrorText}>
+              {innerApiError?.errorMessage}
+            </Alert>
+          </StyledFlexBlockLeftDiv>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <h2>Payment detail</h2>
+          Error
+        </>
+      );
+    }
+  }
   const detail: PaymentType[] = [
     {
       id: "paymentMethodId",
       label: "Payment Method ID",
-      value: "",
+      value: data?.paymentMethodId,
     },
 
     {
       id: "userId",
       label: "User ID",
-      value: "",
+      value: data?.userId,
     },
     {
       id: "paymentType",
       label: "Payment type",
-      value: "",
+      value: data?.paymentType,
     },
     {
       id: "paymentAccountName",
       label: "Payment Account Name",
-      value: "",
+      value: data?.paymentAccountName,
     },
     {
       id: "paymentAccount",
       label: "Payment Account Number",
-      value: "",
+      value: data?.paymentAccount,
     },
     {
       id: "receiverAccountName",
       label: "Receiver Account Name",
-      value: "",
+      value: data?.receiverAccountName,
     },
     {
       id: "receiverAccount",
       label: "Receiver Account Number",
-      value: "",
+      value: data?.receiverAccount,
     },
     {
       id: "amount",
       label: "Amount",
-      value: "",
+      value: data?.amount,
     },
     {
       id: "paymentConfirmationCode",
       label: "Payment Confirmation Code",
-      value: "",
+      value: data?.paymentConfirmationCode,
     },
     {
       id: "registerDate",
       label: "Register Date",
-      value: "",
+      value: data?.registerDate,
     },
     {
       id: "updatedDate",
       label: "Updated Date",
-      value: "",
+      value: data?.updatedDate,
     },
   ];
 
   const approvePayment = () => {
     setApproveConfirmMdalIsOpen(true);
-    setErrorMessage("");
+    setErrorMessage('');
   };
 
   const denyPayment = () => {
     setRejectConfirmMdalIsOpen(true);
-    setErrorMessage("");
+    setErrorMessage('');
   };
 
   return (
     <>
       <ModalPaymentConfirm
         modalIsOpen={approveConfirmModalIsOpen}
-        paymentId={""}
+        paymentId={String(paymentMethodId)}
+        phoneNumber={String(data?.userId)}
+        paymentType={String(data?.paymentType)}
+        receiverAccountName={String(data?.receiverAccountName)}
+        receiverAccount={String(data?.receiverAccount)}
+        amount={String(data?.amount)}
+        approverId={String(window.localStorage.getItem("isSignInInfo"))}
         onRequestClose={() => {
           setCommonCompleteModalIsOpen(true);
         }}
         onRequestError={(err) => {
           setCommonCompleteModalIsOpen(false);
+          setErrorMessage(err);
         }}
         onCancel={() => {
           setApproveConfirmMdalIsOpen(false);
@@ -132,17 +211,19 @@ export const PaymentDetail = () => {
 
       <DenyPaymentConfirm
         modalIsOpen={rejectConfirmModalIsOpen}
-        paymentId={""}
+        paymentId={String(paymentMethodId)}
+        approverId={String(window.localStorage.getItem("isSignInInfo"))}
         onRequestClose={() => {
+          setRejectConfirmMdalIsOpen(false);
           setCommonCompleteModalIsOpen(true);
         }}
         onRequestError={(err) => {
+          setRejectConfirmMdalIsOpen(false);
           setCommonCompleteModalIsOpen(false);
-          setCommonCompleteModalIsOpen(true);
+          setErrorMessage(err);
         }}
         onCancel={() => {
           setRejectConfirmMdalIsOpen(false);
-          setCommonCompleteModalIsOpen(true);
         }}
         setIsLoading={setIsLoading}
       />
@@ -150,6 +231,7 @@ export const PaymentDetail = () => {
         modalIsOpen={commonCompleteModalIsOpen}
         onRequestClose={() => setCommonCompleteModalIsOpen(false)}
         onClick={() => {
+          refetch();
           setCommonCompleteModalIsOpen(false);
         }}
       />
@@ -195,10 +277,18 @@ export const PaymentDetail = () => {
         <StyledNormalButton onClick={() => navigate(-1)}>
           Return
         </StyledNormalButton>
-        <StyledNormalButton onClick={approvePayment}>
-          Approve
-        </StyledNormalButton>
-        <StyledNormalButton onClick={denyPayment}>Reject</StyledNormalButton>
+        {data?.paymentStatus === "Request" ? (
+          <StyledNormalButton onClick={approvePayment}>
+            Approve
+          </StyledNormalButton>
+        ) : (
+          ""
+        )}
+        {data?.paymentStatus === "Request" ? (
+          <StyledNormalButton onClick={denyPayment}>Reject</StyledNormalButton>
+        ) : (
+          ""
+        )}
       </StyledBottomAlignDiv>
     </>
   );
@@ -227,6 +317,11 @@ export const StyledBottomAlignDiv = styled.div`
   margin-top: auto;
 `;
 
+export const StyledFlexBlockLeftDiv = styled.div`
+  display: flex;
+  margin: left;
+`;
+
 export const StyledNormalButton = styledMUI(Button)({
   color: "white",
   backgroundColor: "#14325F",
@@ -241,3 +336,25 @@ export const StyledNormalButton = styledMUI(Button)({
     background: "#c0c0c0",
   },
 });
+
+export type PaymentDetailResponseBody = {
+  paymentMethodId: string;
+  paymentStatus: string;
+  userId: string;
+  paymentType: string;
+  paymentAccountName: string;
+  paymentAccount: string;
+  receiverAccountType: string;
+  receiverAccountName: string;
+  receiverAccount: string;
+  amount: string;
+  paymentConfirmationCode: string;
+  registerDate: string;
+  updatedDate: string;
+};
+
+type TypeApiError = {
+  errorCode?: string;
+  message?: string;
+  errorMessage?: string;
+};

@@ -81,7 +81,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       updateUserInfo,
       signOut,
     }),
-    [isSignIn, userInfo]
+    [isSignIn, userInfo],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

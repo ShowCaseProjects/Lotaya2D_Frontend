@@ -67,7 +67,7 @@ export function NavigationLink({
       to={navigationPath}
       state={navigationPath && navigationState}
     >
-      <StyledBlackTextButton className={isActive} onClick={buttonOnClick} >
+      <StyledBlackTextButton className={isActive} onClick={buttonOnClick}>
         <ListItemText
           disableTypography
           primary={

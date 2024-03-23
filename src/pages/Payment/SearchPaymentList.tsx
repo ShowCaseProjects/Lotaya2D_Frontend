@@ -1,9 +1,10 @@
 import styled from "@emotion/styled";
-import { Box, Button, TextField } from "@mui/material";
-import { useState } from "react";
+import { Box, Button, TextField, fabClasses } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import ReactModal from "react-modal";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { styled as styledMUI } from "@mui/material";
+import { parseQueryString } from "../../utils/format";
 
 ReactModal.setAppElement("#root");
 
@@ -11,16 +12,47 @@ export const ModalSearchPaymentList = ({
   modalIsOpen,
   onRequestClose,
   onClick,
+  searchParams,
 }: ModalProps) => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [searchUrl, setSearchUrl] = useState("");
-  const [paymentId, setPaymentId] = useState("");
-  const [userId, setUserId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [searchUrl, setSearchUrl] = useState('');
+  const [paymentId, setPaymentId] = useState('');
+  const [userId, setUserId] = useState('');
+  const [amount, setAmount] = useState('');
 
+  useEffect(() => {
+    setSearchUrl(
+      parseQueryString({
+        paymentId: paymentId,
+        userId: userId,
+        amount: amount,
+      }, '')
+    )
+  }, [paymentId, userId, amount]);
+
+  const applySearch = () => {
+    onClick(searchUrl);
+    syncSearch();
+  }
+
+  const keyDownHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === 'Return') {
+      event.preventDefault();
+      onClick(searchUrl);
+      syncSearch();
+    }
+    return;
+  };
+  const syncSearch = useCallback(() => {
+    setPaymentId(searchParams.get('paymentId') ?? '');
+    setUserId(searchParams.get('userId') ?? '');
+    setAmount(searchParams.get('amount') ?? '');
+  }, [searchParams]);
+  useEffect(() => {
+    syncSearch();
+  }, [syncSearch])
   const closeSearch = () => {
     onRequestClose();
+    syncSearch();
   };
   return (
     <>
@@ -39,9 +71,12 @@ export const ModalSearchPaymentList = ({
               </StyledLabel>
               <TextField
                 variant="outlined"
+                value={paymentId}
                 size="small"
                 autoComplete="off"
-              ></TextField>
+              // onKeyDown={keyDownHandler}
+              onChange={(e) => setPaymentId(e.target.value)}
+              />
             </StyledOnlyFlexDiv>
           </Box>
           <Box sx={{ "& .MuiTextField-root": { m: 1, width: "30ch" } }}>
@@ -52,25 +87,31 @@ export const ModalSearchPaymentList = ({
               <TextField
                 variant="outlined"
                 size="small"
+                value={userId}
                 autoComplete="off"
-              ></TextField>
+                // onKeyDown={keyDownHandler}
+                onChange={(e) => setUserId(e.target.value)}
+              />
             </StyledOnlyFlexDiv>
           </Box>
           <Box sx={{ "& .MuiTextField-root": { m: 1, width: "30ch" } }}>
             <StyledOnlyFlexDiv>
               <StyledLabel>
-                <div style={{ width: 145 }}> {"Account Type"}</div>
+                <div style={{ width: 145 }}> {"Amount"}</div>
               </StyledLabel>
               <TextField
                 variant="outlined"
                 size="small"
+                value={amount}
                 autoComplete="off"
-              ></TextField>
+                onChange={(e) => setAmount(e.target.value)}
+              // onKeyDown={keyDownHandler}
+              />
             </StyledOnlyFlexDiv>
           </Box>
           <StyledBottomAlignDiv>
-            <StyledInModalButton>Cancel</StyledInModalButton>
-            <StyledInModalButton>Search</StyledInModalButton>
+            <StyledInModalButton onClick={closeSearch}>Cancel</StyledInModalButton>
+            <StyledInModalButton onClick={applySearch}>Search</StyledInModalButton>
           </StyledBottomAlignDiv>
         </StyledFlecificationDiv>
       </ReactModal>
@@ -81,7 +122,8 @@ export const ModalSearchPaymentList = ({
 type ModalProps = {
   modalIsOpen: boolean;
   onRequestClose: () => void;
-  onClick: () => void;
+  onClick: (searchParam: any) => void;
+  searchParams: URLSearchParams
 };
 
 export const LongStyledModal = {

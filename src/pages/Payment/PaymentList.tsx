@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Paper,
   Table,
@@ -20,30 +21,40 @@ import queryString from "query-string";
 import { Loading } from "../Common/Loading";
 import styled from "@emotion/styled";
 import { ModalSearchPaymentList } from "./SearchPaymentList";
+import { object } from "yup";
 
-const translateKey = (k: any) => {
-  const matchRow = columns.find((c) => (c.id = k));
-  if (matchRow) return matchRow.label;
-  return k;
+const translateKey = (key: any) => {
+  let matchLabel=key;
+  columns.forEach((object)=>{
+    if(key===object.id)
+      matchLabel=object.label;
+  })
+  return matchLabel;
 };
 
-const translateValue = (k: any, v: any) => {
-  if (k === "paymentMethodId") return v.replace(/\\\\/g, "\\");
+const translateValue = (key: any, value: any) => {
+  let matchValue=value;
+  columns.forEach((object)=>{
+    if(value===object.id)
+      matchValue=object.id;
+  })
+  return matchValue;
 };
 interface Column {
   id:
-    | "paymentMethodId"
-    | "userId"
-    | "paymentType"
-    | "paymentAccountName"
-    | "paymentAccount"
-    | "receiverAccountName"
-    | "receiverAccount"
-    | "amount"
-    | "paymentConfirmationCode"
-    | "registerDate"
-    | "updatedDate"
-    | "Button";
+  | "paymentMethodId"
+  | "paymentStatus"
+  | "userId"
+  | "paymentType"
+  | "paymentAccountName"
+  | "paymentAccount"
+  | "receiverAccountName"
+  | "receiverAccount"
+  | "amount"
+  | "paymentConfirmationCode"
+  | "registerDate"
+  | "updatedDate"
+  | "Button";
   label?: string;
   minWidth?: number;
   maxWidth?: number;
@@ -56,21 +67,28 @@ const columns: readonly Column[] = [
   {
     id: "paymentMethodId",
     label: "Payment Method ID",
-    minWidth: 270,
-    maxWidth: 270,
+    minWidth: 290,
+    maxWidth: 290,
+    align: "left",
+  },
+  {
+    id: "paymentStatus",
+    label: "Payment Status",
+    minWidth: 200,
+    maxWidth: 200,
     align: "left",
   },
 
   {
     id: "userId",
     label: "User ID",
-    minWidth: 90,
-    maxWidth: 160,
+    minWidth: 160,
+    maxWidth: 180,
     align: "left",
   },
   {
     id: "paymentType",
-    label: "Payment type",
+    label: "Payment Type",
     minWidth: 150,
     maxWidth: 150,
     align: "left",
@@ -92,8 +110,8 @@ const columns: readonly Column[] = [
   {
     id: "receiverAccountName",
     label: "Receiver Account Name",
-    minWidth: 250,
-    maxWidth: 250,
+    minWidth: 200,
+    maxWidth: 200,
     align: "left",
   },
   {
@@ -106,15 +124,15 @@ const columns: readonly Column[] = [
   {
     id: "amount",
     label: "Amount",
-    minWidth: 100,
+    minWidth: 160,
     maxWidth: 160,
     align: "left",
   },
   {
     id: "paymentConfirmationCode",
     label: "Payment Confirmation Code",
-    minWidth: 300,
-    maxWidth: 300,
+    minWidth: 250,
+    maxWidth: 250,
     align: "left",
   },
   {
@@ -133,8 +151,8 @@ const columns: readonly Column[] = [
   },
   {
     id: "Button",
-    minWidth: 300,
-    maxWidth: 300,
+    minWidth: 100,
+    maxWidth: 100,
     padding: 0,
   },
 ];
@@ -143,27 +161,46 @@ export const PaymentList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [page, setPage] = useState(0);
+  const [paymentListApiError, setPaymentListApiError] =
+    useState<AxiosError | null>(null);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [hasApiError, setHasApiError] = useState(false),
     [toggleApi, setToggleApi] = useState(false);
   const [searchPaymentListModalIsOpen, setSearchPaymentListModalIsOpen] =
     useState(false);
 
+    useEffect(() => {
+      setPage(0);
+    }, [rowsPerPage, searchParams]);
+
+  const getQueryParams = () => {
+    return queryString.parse(searchParams.toString());
+  }
+  const deleteCriteria = (key: any) => {
+    console.log(key)
+    searchParams.delete(key);
+    refetch();
+    return navigate('/payment?' + searchParams.toString());
+  };
+
+ 
   const fetchPaymentList = async () => {
+    setPaymentListApiError(null);
     const paymentList: PaymentTypeList[] = await axios
       .get(`${API_URL}/paymentmethod?` + searchParams.toString())
-      .then((res) => res.data);
+      .then((res) => {
+        return res.data;
+      })
+      .catch((error) => {
+        setPaymentListApiError(error);
+      });
     return paymentList;
   };
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: [("payment" + searchParams.toString() + toggleApi) as string],
+  const { data, isLoading, error,refetch } = useQuery({
+    queryKey: [("paymentmethod" + searchParams.toString() + toggleApi) as string],
     queryFn: fetchPaymentList,
   });
-
-  useEffect(() => {
-    setPage(0);
-  }, [rowsPerPage, searchParams]);
 
   useEffect(() => {
     if (
@@ -177,10 +214,6 @@ export const PaymentList = () => {
     };
   }, [error]);
 
-  const deleteCriteria = (key: any) => {
-    searchParams.delete(key);
-    return navigate("/payment?" + searchParams.toString());
-  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -200,8 +233,6 @@ export const PaymentList = () => {
     setSearchPaymentListModalIsOpen(false);
   };
 
-  const getQueryParams = () => queryString.parse(searchParams.toString());
-
   if (isLoading) {
     return (
       <>
@@ -211,16 +242,43 @@ export const PaymentList = () => {
       </>
     );
   }
-
-  // if (error) {
-  //     return (
-  //         <>
-  //             <h2>Payment</h2>
-  //             Error
-  //         </>
-  //     );
-  // }
-
+  if (paymentListApiError instanceof AxiosError) {
+    const innerApiError: TypeApiError = paymentListApiError?.response
+      ?.data as TypeApiError;
+    if (
+      innerApiError?.errorCode === "E1000" ||
+      innerApiError?.errorCode === "E1111"
+    ) {
+      return (
+        <>
+          <h2>
+            Payment -{" "}
+            {searchParams.get("paymentStatus")
+              ? searchParams.get("paymentStatus")
+              : "Request"}
+          </h2>
+          <br />
+          <StyledFlexBlockLeftDiv>
+            <Alert variant="outlined" severity="error" style={StyledErrorText}>
+              {innerApiError?.errorMessage}
+            </Alert>
+          </StyledFlexBlockLeftDiv>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <h2>
+            Payment -{" "}
+            {searchParams.get("paymentStatus")
+              ? searchParams.get("paymentStatus")
+              : "Request"}
+          </h2>
+          Error
+        </>
+      );
+    }
+  }
   let array: PaymentTypeList[] = [];
   if (data) {
     array = Object.keys(data).map(
@@ -233,8 +291,14 @@ export const PaymentList = () => {
         modalIsOpen={searchPaymentListModalIsOpen}
         onRequestClose={onSearchPaymentListModalRequestClose}
         onClick={onSearchPaymentListModalClick}
+        searchParams={searchParams}
       />
-      <h2>Payment - {}</h2>
+      <h2>
+        Payment -{" "}
+        {searchParams.get("paymentStatus")
+          ? searchParams.get("paymentStatus")
+          : "Request"}
+      </h2>
       <StyledRightAlignDiv>
         <StyledNormalButton
           onClick={() => setSearchPaymentListModalIsOpen(true)}
@@ -247,8 +311,8 @@ export const PaymentList = () => {
           return (
             <StyledCriteraDiv key={key}>
               <>
-                {translateKey(key)}:{" "}
-                {translateValue(key, value).replace(/\\\\/g, "\\")}
+                {translateKey(key)}:
+                {translateValue(key, value)}
               </>
               <StyledCircleButton onClick={() => deleteCriteria(key)}>
                 x
@@ -304,7 +368,7 @@ export const PaymentList = () => {
                                 }}
                               >
                                 <StyledNormalLink
-                                  to={`payment/detail/${row.paymentId}`}
+                                  to={`/payment/detail/${row.paymentMethodId}`}
                                 >
                                   Detail
                                 </StyledNormalLink>
@@ -376,6 +440,10 @@ export const StyledNormalButton = styledMUI(Button)({
     background: "#c0c0c0",
   },
 });
+export const StyledFlexBlockLeftDiv = styled.div`
+  display: flex;
+  margin: left;
+`;
 
 export const StyledRightAlignDiv = styled.div`
   text-align: right;
@@ -429,3 +497,18 @@ export const StyledNormalLink = styledMUI(Link)({
     background: "#c0c0c0",
   },
 });
+
+export const StyledBlockLeftDiv = styled.div`
+  display: flex;
+  margin: left;
+`;
+
+export const StyledErrorText = {
+  color: "#ff0000",
+};
+
+type TypeApiError = {
+  errorCode?: string;
+  message?: string;
+  errorMessage?: string;
+};

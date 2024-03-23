@@ -1,11 +1,19 @@
 import styled from "@emotion/styled";
 import Modal from "react-modal";
 import { Button, styled as styledMUI } from "@mui/material";
+import axios from "axios";
+import { API_URL } from "../../config";
 
 Modal.setAppElement("#root");
 type ModalProps = {
   modalIsOpen: boolean;
   paymentId: string;
+  phoneNumber: string;
+  paymentType: string;
+  receiverAccountName: string;
+  receiverAccount: string;
+  amount: string;
+  approverId: string;
   onRequestClose: () => void;
   onRequestError: (error: any) => void;
   onCancel: () => void;
@@ -14,11 +22,42 @@ type ModalProps = {
 export const ModalPaymentConfirm = ({
   modalIsOpen,
   paymentId,
+  phoneNumber,
+  paymentType,
+  receiverAccountName,
+  receiverAccount,
+  amount,
+  approverId,
   onRequestClose,
   onRequestError,
   onCancel,
   setIsLoading,
 }: ModalProps) => {
+  const paymentInternalId = paymentId;
+  const approvePayment = (event: React.MouseEvent<Element, MouseEvent>) => {
+    setIsLoading(true);
+    axios
+      .post(`${API_URL}/paymentmethod/${paymentInternalId}/approve`, {
+        phoneNumber,
+        paymentType,
+        receiverAccountName,
+        receiverAccount,
+        amount,
+        approverId,
+      })
+      .then((res) => res.data)
+      .then(() => onCancel())
+      .then(() => {
+        setIsLoading(false);
+        onRequestClose();
+      })
+      .catch((error: any) => {
+        setIsLoading(false);
+        if (["E1117", "E1000"].includes(error.response?.data.errorCode)) {
+          onRequestError(error.response?.data.errorMessage);
+        }
+      });
+  };
   return (
     <>
       <Modal
@@ -32,7 +71,9 @@ export const ModalPaymentConfirm = ({
           </StyledTextUpperCenterDiv>
           <StyledBottomAlignDiv>
             <StyledInModalButton onClick={onCancel}>Cancel</StyledInModalButton>
-            <StyledInModalButton type="submit">Ok</StyledInModalButton>
+            <StyledInModalButton onClick={approvePayment} type="submit">
+              Ok
+            </StyledInModalButton>
           </StyledBottomAlignDiv>
         </StyledFlecificationDiv>
       </Modal>

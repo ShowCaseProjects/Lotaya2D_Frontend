@@ -17,9 +17,7 @@ export const CommonCompleteModal = (props: ModalProps) => {
         onRequestClose={props.onRequestClose}
       >
         <StyledFlecificationDiv>
-          <StyledTextUpperCenterDiv>
-            Are you sure to approve?
-          </StyledTextUpperCenterDiv>
+          <StyledTextUpperCenterDiv>Completed</StyledTextUpperCenterDiv>
           <StyledBottomAlignDiv>
             <StyledInModalButton onClick={props.onClick}>
               Close
